@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Proyecto Comidas Escolares Ecuador | WFP</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet for maps -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Loading screen -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content animate-slideInLeft">
+                <div class="logo">
+                    <div class="logo-icon">WFP</div>
+                    <div>
+                        <div class="logo-text">Proyecto Comidas Escolares</div>
+                        <div class="subtitle">Ecuador - Dashboard Ejecutivo</div>
+                    </div>
+                </div>
+                <div class="period">{{ data.resumen.periodo }}</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Estadísticas principales -->
+            <div class="stats-grid animate-fadeInUp">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" data-count="{{ data.resumen.total_estudiantes }}">0</div>
+                    <div class="stat-label">Estudiantes Beneficiados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏫</div>
+                    <div class="stat-value" data-count="{{ data.resumen.total_ue }}">0</div>
+                    <div class="stat-label">Unidades Educativas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👨‍🌾</div>
+                    <div class="stat-value" data-count="{{ data.productores.total }}">0</div>
+                    <div class="stat-label">Productores Locales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🥗</div>
+                    <div class="stat-value" data-count="{{ data.resumen.total_alimentos_tm }}" data-decimals="1">0</div>
+                    <div class="stat-label">TM de Alimentos</div>
+                </div>
+            </div>
+
+            <!-- Sección de Productores -->
+            <div class="producers-section animate-fadeInUp">
+                <h2 class="section-title">
+                    <span class="title-icon">🌾</span>
+                    Análisis de Productores Locales
+                </h2>
+                <div class="producers-grid">
+                    <div class="producer-card highlight">
+                        <div class="producer-icon small">👨‍🌾</div>
+                        <h3>Pequeños Productores</h3>
+                        <div class="producer-value">{{ data.productores.por_tamano.pequenos.cantidad }}</div>
+                        <div class="producer-percentage">{{ data.productores.por_tamano.pequenos.porcentaje }}%</div>
+                        <p class="producer-desc">{{ data.productores.por_tamano.pequenos.descripcion }}</p>
+                        <div class="producer-impact">
+                            <small>Promedio: {{ data.productores.por_tamano.pequenos.hectareas_promedio }} ha</small>
+                        </div>
+                    </div>
+                    <div class="producer-card highlight">
+                        <div class="producer-icon medium">🚜</div>
+                        <h3>Medianos Productores</h3>
+                        <div class="producer-value">{{ data.productores.por_tamano.medianos.cantidad }}</div>
+                        <div class="producer-percentage">{{ data.productores.por_tamano.medianos.porcentaje }}%</div>
+                        <p class="producer-desc">{{ data.productores.por_tamano.medianos.descripcion }}</p>
+                        <div class="producer-impact">
+                            <small>Promedio: {{ data.productores.por_tamano.medianos.hectareas_promedio }} ha</small>
+                        </div>
+                    </div>
+                    <div class="producer-card">
+                        <div class="producer-icon large">🏭</div>
+                        <h3>Grandes Productores</h3>
+                        <div class="producer-value">{{ data.productores.por_tamano.grandes.cantidad }}</div>
+                        <div class="producer-percentage">{{ data.productores.por_tamano.grandes.porcentaje }}%</div>
+                        <p class="producer-desc">{{ data.productores.por_tamano.grandes.descripcion }}</p>
+                        <div class="producer-impact">
+                            <small>Promedio: {{ data.productores.por_tamano.grandes.hectareas_promedio }} ha</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="impact-summary">
+                    <h4>Impacto Económico en Productores</h4>
+                    <div class="impact-stats">
+                        <div class="impact-item">
+                            <span class="impact-label">Ingreso Promedio Mensual</span>
+                            <span class="impact-value">${{ data.productores.impacto_economico.ingreso_promedio_mensual }}</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-label">Incremento de Ingresos</span>
+                            <span class="impact-value">+{{ data.productores.impacto_economico.incremento_porcentual }}%</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-label">Familias Beneficiadas</span>
+                            <span class="impact-value">{{ "{:,}".format(data.productores.impacto_economico.familias_beneficiadas) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alimento Estrella -->
+            <div class="star-food-section animate-fadeInUp">
+                <h2 class="section-title">
+                    <span class="title-icon">⭐</span>
+                    Alimento Estrella del Mes
+                </h2>
+                <div class="star-food-container">
+                    <div class="star-food-image">
+                        <div class="star-badge">{{ data.alimento_estrella.nombre }}</div>
+                    </div>
+                    <div class="star-food-content">
+                        <h3>{{ data.alimento_estrella.titulo }}</h3>
+                        <p class="star-food-desc">{{ data.alimento_estrella.descripcion }}</p>
+                        <div class="benefits-list">
+                            <h4>Beneficios Nutricionales:</h4>
+                            <ul>
+                                {% for beneficio in data.alimento_estrella.beneficios %}
+                                <li>{{ beneficio }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="star-food-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ data.alimento_estrella.frecuencia_semanal }}x</span>
+                                <span class="stat-text">por semana</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ "{:,}".format(data.alimento_estrella.porciones_servidas) }}</span>
+                                <span class="stat-text">porciones servidas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categorías de Alimentos -->
+            <div class="food-categories-section animate-fadeInUp">
+                <h2 class="section-title">
+                    <span class="title-icon">🍽️</span>
+                    Distribución Nutricional Equilibrada
+                </h2>
+                <div class="categories-container">
+                    <div class="chart-container" style="max-width: 500px; margin: 0 auto;">
+                        <canvas id="foodCategoriesChart"></canvas>
+                    </div>
+                    <div class="categories-grid">
+                        {% for key, categoria in data.categorias_alimentos.items() %}
+                        <div class="category-card">
+                            <div class="category-header" style="background-color: {{ categoria.color }}20; border-left: 4px solid {{ categoria.color }};">
+                                <h4>{{ categoria.nombre }}</h4>
+                                <span class="category-percentage">{{ categoria.porcentaje }}%</span>
+                            </div>
+                            <div class="category-items">
+                                {% for producto in categoria.productos %}
+                                <span class="food-item">{{ producto }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPIs destacados -->
+            <div class="kpi-section animate-fadeInUp">
+                <h2 class="section-title">Indicadores Clave de Desempeño</h2>
+                <div class="kpi-grid">
+                    {% for kpi in data.indicadores_clave %}
+                    <div class="kpi-item">
+                        <div class="kpi-value">{{ kpi.valor }}</div>
+                        <div class="kpi-name">{{ kpi.nombre }}</div>
+                        <div class="kpi-desc">{{ kpi.descripcion }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Botones de exportación -->
+            <div class="export-buttons animate-fadeInUp">
+                <a href="/api/export/excel" class="export-btn">
+                    <span class="btn-icon">📊</span>
+                    Exportar a Excel
+                </a>
+                <a href="/api/export/pdf" class="export-btn orange">
+                    <span class="btn-icon">📄</span>
+                    Descargar PDF
+                </a>
+            </div>
+
+            <!-- Mapa Interactivo -->
+            <div class="map-section animate-fadeInUp">
+                <h2 class="section-title">
+                    <span class="title-icon">🗺️</span>
+                    Cobertura Geográfica del Proyecto
+                </h2>
+                <div class="map-container">
+                    <div id="ecuadorMap"></div>
+                    <div class="map-legend">
+                        <h4>Estudiantes por Provincia</h4>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #FF6B00"></span>
+                                <span>0 - 1,000</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #007DBC"></span>
+                                <span>1,001 - 3,000</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #0033a1"></span>
+                                <span>3,001+</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-section animate-fadeInUp">
+                <div class="chart-container">
+                    <h3 class="chart-title">Evolución de Beneficiarios</h3>
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Análisis de Productores</h3>
+                    <canvas id="producersChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico de modalidades -->
+            <div class="chart-container animate-fadeInUp" style="margin-bottom: 3rem;">
+                <h3 class="chart-title">Comparación de Modalidades</h3>
+                <canvas id="modalidadesChart" style="max-height: 300px;"></canvas>
+            </div>
+
+            <!-- Modalidades -->
+            <div class="info-grid animate-fadeInUp">
+                <div class="info-card">
+                    <h3><span class="card-icon">📚</span> Modalidad GAD</h3>
+                    <ul>
+                        <li>{{ "{:,}".format(data.modalidades.GAD.estudiantes) }} estudiantes beneficiados</li>
+                        <li>{{ data.modalidades.GAD.ue }} Unidades Educativas</li>
+                        <li>{{ data.modalidades.GAD.tm_alimentos }} TM de alimentos entregados</li>
+                        <li>{{ data.modalidades.GAD.appe }} APPE colaborando</li>
+                        <li>{{ data.modalidades.GAD.porcentaje_estudiantes }}% del total de estudiantes</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3><span class="card-icon">🎓</span> Modalidad MINEDUC</h3>
+                    <ul>
+                        <li>{{ "{:,}".format(data.modalidades.MINEDUC.estudiantes) }} estudiantes beneficiados</li>
+                        <li>{{ data.modalidades.MINEDUC.ue }} Unidades Educativas</li>
+                        <li>{{ data.modalidades.MINEDUC.tm_alimentos }} TM de alimentos entregados</li>
+                        <li>{{ data.modalidades.MINEDUC.appe }} APPE colaborando</li>
+                        <li>{{ data.modalidades.MINEDUC.porcentaje_estudiantes }}% del total de estudiantes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Componentes del proyecto -->
+            <div class="info-grid animate-fadeInUp">
+                <div class="info-card">
+                    <h3><span class="card-icon">🥗</span> Componente de Nutrición</h3>
+                    <p class="card-description">{{ data.componentes.nutricion.descripcion }}</p>
+                    <ul>
+                        {% for actividad in data.componentes.nutricion.actividades %}
+                        <li>{{ actividad }}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="impact-box">
+                        <strong>Impacto:</strong> {{ data.componentes.nutricion.impacto }}
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3><span class="card-icon">💪</span> Componente de Fortalecimiento</h3>
+                    <p class="card-description">{{ data.componentes.fortalecimiento.descripcion }}</p>
+                    <ul>
+                        {% for actividad in data.componentes.fortalecimiento.actividades %}
+                        <li>{{ actividad }}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="impact-box">
+                        <strong>Impacto:</strong> {{ data.componentes.fortalecimiento.impacto }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logros destacados -->
+            <div class="chart-container animate-fadeInUp highlight-section">
+                <h3 class="chart-title">🏆 Logros Destacados del Proyecto</h3>
+                <div class="achievements-grid">
+                    {% for logro in data.logros_destacados %}
+                    <div class="achievement-item">
+                        {{ logro }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-title">Programa Mundial de Alimentos - Ecuador</p>
+            <p class="footer-subtitle">Salvando vidas, cambiando vidas</p>
+            <p class="footer-date">
+                Última actualización: {{ data.resumen.fecha_actualizacion }}
+            </p>
+        </div>
+    </footer>
+
+    <!-- Data for JavaScript -->
+    <script>
+        const evolutionData = {{ data.evolucion_mensual | tojson }};
+        const provincialData = {{ data.cobertura_provincial | tojson }};
+        const modalidadesData = {
+            GAD: {{ data.modalidades.GAD.estudiantes }},
+            MINEDUC: {{ data.modalidades.MINEDUC.estudiantes }}
+        };
+        const productoresData = {{ data.productores | tojson }};
+        const categoriasAlimentos = {{ data.categorias_alimentos | tojson }};
+        const mapaCoordenadasData = {{ data.mapa_coordenadas | tojson }};
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
